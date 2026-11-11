@@ -10,6 +10,10 @@ declared for it.
 
 *Vitrail* is French for a stained-glass window: coloured light, made by hand, one pane at a time.
 
+| In the chat | In the gallery |
+|---|---|
+| ![A shader card with its sliders in a Hermes Desktop chat](assets/desktop-chat.jpg) | ![The gallery page with a shader open above the library](assets/desktop-gallery.jpg) |
+
 ## What it does
 
 - **A shader is the answer.** "A lagoon at dusk", "a candle flame I can blow on", "a loading
@@ -86,7 +90,8 @@ recipes for noise, palettes, domain warping and SDF raymarching.
 | `vitrail_library` | Lists saved shaders, or returns one shader's source and GPU report by id. |
 
 Two hooks (`post_tool_call`, `transform_llm_output`) make sure a reply delivers the shader the
-tool saved during its turn, even when the model forgets the delivery line.
+tool saved during its turn, even when the model forgets the delivery line. When the model
+rendered several versions in one turn and delivered none, the reply gets the final one.
 
 ## What Vitrail does on your machine
 

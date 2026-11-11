@@ -264,6 +264,19 @@ class HookTests(unittest.TestCase):
         self.assertIsNone(hooks.append_missing_media(response_text="x", session_id="s", turn_id="w"))
 
 
+    def test_only_the_final_render_of_a_turn_is_appended(self):
+        for shader in ("a-aaaaaa", "b-bbbbbb"):
+            hooks.record_media(tool_name="vitrail_render", session_id="s", turn_id="it",
+                               result=json.dumps({"success": True, "deliver": f'::vitrail{{id="{shader}"}}'}))
+        out = hooks.append_missing_media(response_text="Done.", session_id="s", turn_id="it")
+        self.assertEqual(out, 'Done.\n\n::vitrail{id="b-bbbbbb"}')
+        # The model delivered the first one itself: nothing is added.
+        for shader in ("a-aaaaaa", "b-bbbbbb"):
+            hooks.record_media(tool_name="vitrail_render", session_id="s", turn_id="it2",
+                               result=json.dumps({"success": True, "deliver": f'::vitrail{{id="{shader}"}}'}))
+        self.assertIsNone(hooks.append_missing_media(
+            response_text='Both:\n\n::vitrail{id="a-aaaaaa"}', session_id="s", turn_id="it2"))
+
     def test_directive_line_is_appended(self):
         line = '::vitrail{id="lagoon-abcdef"}'
         ok = json.dumps({"success": True, "deliver": line})

@@ -12,6 +12,9 @@ docs_url: https://github.com/elomkdn/vitrail#readme
 version: "0.1.0"
 image: https://raw.githubusercontent.com/elomkdn/vitrail/REPLACE_WITH_40_CHAR_COMMIT_SHA/assets/banner.jpg
 screenshots:
+  - https://raw.githubusercontent.com/elomkdn/vitrail/REPLACE_WITH_40_CHAR_COMMIT_SHA/assets/desktop-chat.jpg
+  - https://raw.githubusercontent.com/elomkdn/vitrail/REPLACE_WITH_40_CHAR_COMMIT_SHA/assets/desktop-gallery.jpg
+  - https://raw.githubusercontent.com/elomkdn/vitrail/REPLACE_WITH_40_CHAR_COMMIT_SHA/assets/desktop-library.jpg
   - https://raw.githubusercontent.com/elomkdn/vitrail/REPLACE_WITH_40_CHAR_COMMIT_SHA/assets/vitrail.jpg
   - https://raw.githubusercontent.com/elomkdn/vitrail/REPLACE_WITH_40_CHAR_COMMIT_SHA/assets/lagoon.jpg
   - https://raw.githubusercontent.com/elomkdn/vitrail/REPLACE_WITH_40_CHAR_COMMIT_SHA/assets/lumignon.jpg

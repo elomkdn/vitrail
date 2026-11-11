@@ -2,7 +2,8 @@
 
 post_tool_call remembers the deliver line of each successful vitrail_render (a MEDIA file, or the
 ::vitrail directive on a Desktop that draws directives); transform_llm_output appends it when the
-reply does not already carry it. Records are keyed by
+reply delivers none of them (the last one, when the model rendered several times in the turn).
+Records are keyed by
 (session_id, turn_id), which Hermes passes to both hooks, so a turn that ends without text cannot
 push its file into a later reply.
 """
@@ -86,7 +87,7 @@ def append_missing_media(response_text=None, session_id=None, **kw):
         lines = _pending.pop(key, None)
     if not lines or not isinstance(response_text, str):
         return None
-    missing = [line for line in lines if not _delivered(line, response_text)]
-    if not missing:
-        return None
-    return response_text.rstrip() + "".join(f"\n\n{line}" for line in missing)
+    if any(_delivered(line, response_text) for line in lines):
+        return None  # the model chose what to show
+    # Several renders in one turn are iterations on the same request: show the final one.
+    return f"{response_text.rstrip()}\n\n{lines[-1]}"
