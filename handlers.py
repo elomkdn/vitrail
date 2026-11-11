@@ -57,12 +57,15 @@ def make_handlers(data_root: Callable[[], Path]) -> dict:
                 payload["warnings"] = checked["warnings"]
 
             report = None
-            if store.desktop_is_live() and _ask_desktop(saved["id"], checked["code"]):
+            asked = store.desktop_is_live() and _ask_desktop(saved["id"], checked["code"])
+            if asked:
                 report = store.wait_report(saved["id"], GPU_WAIT_S)
             if report is None:
-                payload["gpu"] = ("not verified: Hermes Desktop did not answer in time. The "
-                                  "shader compiles when the user sees it; if it fails, the card "
-                                  "offers to send you the error.")
+                why = ("Hermes Desktop did not answer in time" if asked
+                       else "no Hermes Desktop window is listening")
+                payload["gpu"] = (f"not verified: {why}. The shader compiles when the user "
+                                  "opens it; if it fails in Hermes Desktop, the card offers to "
+                                  "send you the error.")
             elif not report.get("ok"):
                 return _error(
                     "The shader did not compile on the user's GPU. Fix the source and call "
