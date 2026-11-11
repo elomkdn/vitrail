@@ -7,6 +7,7 @@ Routes:
     POST   /hello            the Desktop half is open (lets vitrail_render wait for the GPU)
     POST   /report           what the GPU said about one shader, with an optional JPEG still
     GET    /shaders          the library, newest first, with sources
+    GET    /shaders/{id}     one shader's title and source (the directive card reads it)
     DELETE /shaders/{id}     remove one shader from the library
     POST   /snapshot         save a PNG the user exported from a card; returns its path
 """
@@ -61,8 +62,9 @@ def _data_url_bytes(url, prefix: str, limit: int) -> bytes | None:
 
 
 @router.post("/hello")
-def hello():
-    _store().desktop_seen()
+def hello(body: dict | None = Body(None)):
+    body = body if isinstance(body, dict) else {}
+    _store().desktop_seen({"tool_media": body.get("toolMedia"), "directive": body.get("directive")})
     return {"ok": True}
 
 
@@ -84,6 +86,14 @@ def report(body: dict = Body(...)):
 @router.get("/shaders")
 def shaders(limit: int = Query(60, ge=1, le=100)):
     return {"shaders": _store().list(limit, with_code=True)}
+
+
+@router.get("/shaders/{shader_id}")
+def shader(shader_id: str):
+    found = _store().get(shader_id)
+    if found is None:
+        raise HTTPException(status_code=404, detail="Shader not found.")
+    return {"id": found["id"], "title": found.get("title", ""), "code": found["code"]}
 
 
 @router.delete("/shaders/{shader_id}")

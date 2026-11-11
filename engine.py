@@ -470,11 +470,25 @@ class Store:
             time.sleep(0.05)
         return _read_json(path)
 
-    def desktop_seen(self) -> None:
+    def desktop_seen(self, caps: dict | None = None) -> None:
+        """A Desktop window says it is listening, and which transcript surfaces it has."""
+        seen = {"at": time.time()}
+        previous = _read_json(self.root / "desktop.json") or {}
+        for key in ("tool_media", "directive"):
+            value = (caps or {}).get(key, previous.get(key))
+            if isinstance(value, bool):
+                seen[key] = value
         self.root.mkdir(parents=True, exist_ok=True)
-        _write(self.root / "desktop.json", json.dumps({"at": time.time()}))
+        _write(self.root / "desktop.json", json.dumps(seen))
 
-    def desktop_is_live(self) -> bool:
+    def desktop_caps(self) -> dict | None:
+        """What the listening Desktop window can draw, or None when none is listening."""
         seen = _read_json(self.root / "desktop.json")
         at = seen.get("at") if seen else None
-        return isinstance(at, (int, float)) and 0 <= time.time() - at < self.DESKTOP_FRESH_S
+        if not isinstance(at, (int, float)) or not 0 <= time.time() - at < self.DESKTOP_FRESH_S:
+            return None
+        return {"tool_media": seen.get("tool_media") is True,
+                "directive": seen.get("directive") is True}
+
+    def desktop_is_live(self) -> bool:
+        return self.desktop_caps() is not None

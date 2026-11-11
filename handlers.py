@@ -14,7 +14,13 @@ logger = logging.getLogger(__name__)
 GPU_WAIT_S = 6.0
 
 INSTRUCTION = ("The shader is saved and will animate in the chat. End your reply with exactly "
-               "this line, on a line of its own (not in code or quotes): ")
+               "this line, on a line of its own with a blank line before it (not in code or "
+               "quotes): ")
+
+
+def directive(shader_id: str) -> str:
+    """The transcript directive the Desktop half draws as a live card."""
+    return f'::vitrail{{id="{shader_id}"}}'
 
 
 def _error(message: str, **extra) -> str:
@@ -57,7 +63,8 @@ def make_handlers(data_root: Callable[[], Path]) -> dict:
                 payload["warnings"] = checked["warnings"]
 
             report = None
-            asked = store.desktop_is_live() and _ask_desktop(saved["id"], checked["code"])
+            caps = store.desktop_caps()
+            asked = caps is not None and _ask_desktop(saved["id"], checked["code"])
             if asked:
                 report = store.wait_report(saved["id"], GPU_WAIT_S)
             if report is None:
@@ -86,7 +93,12 @@ def make_handlers(data_root: Callable[[], Path]) -> dict:
                     payload["still"] = poster["poster"]
                     payload["still_note"] = ("A frame of the shader at t = 2 s. Look at it with "
                                              "your vision tool if you want to check the result.")
-            payload["deliver"] = f"MEDIA:{saved['html']}"
+            # A Desktop without tool media renderers draws the card from a directive; every
+            # other surface gets the standalone player as a MEDIA file.
+            if caps and caps["directive"] and not caps["tool_media"]:
+                payload["deliver"] = directive(saved["id"])
+            else:
+                payload["deliver"] = f"MEDIA:{saved['html']}"
             payload["instruction"] = INSTRUCTION + payload["deliver"]
             return json.dumps(payload, ensure_ascii=False)
         except Exception as e:

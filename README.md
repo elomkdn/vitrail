@@ -50,8 +50,9 @@ hermes plugins install elomkdn/vitrail
 hermes plugins enable vitrail
 ```
 
-Then, in Hermes Desktop, switch on **Vitrail** under **Capabilities → Plugins** (desktop halves
-ship off by default) and start a new chat.
+Then, in Hermes Desktop, open **Capabilities → Plugins → Vitrail** and switch on **Desktop**
+(desktop halves ship off by default; the Agent switch alone only gives you the HTML player). A
+**Vitrail** entry appears in the sidebar. Start a new chat.
 
 ## Try it
 
@@ -85,7 +86,7 @@ recipes for noise, palettes, domain warping and SDF raymarching.
 | `vitrail_library` | Lists saved shaders, or returns one shader's source and GPU report by id. |
 
 Two hooks (`post_tool_call`, `transform_llm_output`) make sure a reply delivers the shader the
-tool saved during its turn, even when the model forgets the `MEDIA:` line.
+tool saved during its turn, even when the model forgets the delivery line.
 
 ## What Vitrail does on your machine
 
@@ -99,15 +100,18 @@ tool saved during its turn, even when the model forgets the `MEDIA:` line.
 - **The still frame's path is given to the model.** If the model opens it with a vision tool,
   that image goes to your model provider like any other image.
 - **While a Desktop window is open** its Vitrail half calls the plugin's own local route
-  (`/api/plugins/vitrail/hello`) once a minute, so the tool knows a GPU is listening.
+  (`/api/plugins/vitrail/hello`) once a minute, so the tool knows a GPU is listening and which
+  transcript surface that Desktop has.
   `vitrail_render` then waits up to 6 seconds for the verdict. With no Desktop window it does
   not wait and says the shader is not verified.
 
 ## Requirements and limits
 
-- Hermes Agent 0.23.0 or later. The live card needs a Hermes Desktop with tool media renderers;
-  older builds and other surfaces show the standalone HTML player.
-- A GPU with WebGL 2 (any machine that runs Hermes Desktop).
+- Hermes Agent 0.23.0 or later, and Hermes Desktop 0.22.5 or later for the live card. Desktop
+  draws it through a tool media renderer where it has one and through a transcript directive
+  (`::vitrail{id="…"}`) where it does not; the Desktop half tells the tool which one to use.
+- WebGL 2 (any machine that runs Hermes Desktop). Where Desktop falls back to software
+  rendering, shaders run on the CPU and Vitrail lowers their resolution to stay smooth.
 - GPU verification needs a Desktop window connected to the same Hermes that runs the agent.
 - One pass per shader: no textures, buffers or audio inputs.
 

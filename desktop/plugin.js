@@ -1049,6 +1049,58 @@ function ShaderCard({ file, args, sessionId, fallback }) {
   return jsx(ShaderPlayer, { source, title, shaderId: ID_RE.test(id) ? id : null, sessionId, mode: 'card' })
 }
 
+// A Desktop without tool media renderers draws the card from `::vitrail{id="…"}`. A directive
+// carries strings only, so the source comes from the plugin's own backend.
+function DirectiveCard({ id, sessionId }) {
+  const [state, setState] = useState({ status: 'loading' })
+
+  useEffect(() => {
+    let live = true
+
+    if (!doors || !ID_RE.test(id)) {
+      setState({ status: 'missing' })
+
+      return undefined
+    }
+
+    setState({ status: 'loading' })
+    doors.rest(`/shaders/${id}`).then(
+      data =>
+        live &&
+        setState(
+          typeof data?.code === 'string' && data.code.trim()
+            ? { status: 'ready', source: normalize(data.code), title: String(data.title || id).slice(0, 80) }
+            : { status: 'missing' }
+        ),
+      () => live && setState({ status: 'missing' })
+    )
+
+    return () => {
+      live = false
+    }
+  }, [id])
+
+  if (state.status === 'ready') {
+    return jsx(ShaderPlayer, { source: state.source, title: state.title, shaderId: id, sessionId, mode: 'card' })
+  }
+
+  return jsx('div', {
+    style: {
+      margin: '8px 0',
+      padding: '10px 12px',
+      maxWidth: 760,
+      borderRadius: 12,
+      border: '1px solid var(--ui-stroke-secondary)',
+      fontSize: 12,
+      color: 'var(--ui-text-tertiary)'
+    },
+    children:
+      state.status === 'loading'
+        ? 'Loading the shader…'
+        : 'This Vitrail shader is not in the library of this profile any more.'
+  })
+}
+
 // ── Gallery page ────────────────────────────────────────────────────────────
 
 function Gallery() {
@@ -1244,6 +1296,21 @@ export default {
       })
     }
 
+    if (typeof sdk.TRANSCRIPT_DIRECTIVE_AREA === 'string') {
+      ctx.register({
+        id: 'shader-directive',
+        area: sdk.TRANSCRIPT_DIRECTIVE_AREA,
+        data: {
+          name: 'vitrail',
+          render: ({ attrs, sessionId }) => {
+            const id = typeof attrs?.id === 'string' ? attrs.id : ''
+
+            return ID_RE.test(id) ? jsx(DirectiveCard, { id, sessionId: sessionId ?? null }, id) : null
+          }
+        }
+      })
+    }
+
     ctx.registerMany([
       { id: 'page', area: sdk.ROUTES_AREA, data: { path: '/vitrail' }, render: () => jsx(Gallery, {}) },
       { id: 'nav', area: sdk.SIDEBAR_NAV_AREA, data: { path: '/vitrail', label: 'Vitrail', codicon: 'symbol-color' } },
@@ -1260,7 +1327,12 @@ export default {
     ])
 
     // The agent half waits for a GPU verdict only while a Desktop window says it is listening.
-    const hello = () => ctx.rest('/hello', { method: 'POST' }).catch(() => {})
+    // It also says which transcript surface this Desktop has, so the tool picks the right one.
+    const surfaces = {
+      toolMedia: typeof sdk.TOOL_MEDIA_RENDERER_AREA === 'string',
+      directive: typeof sdk.TRANSCRIPT_DIRECTIVE_AREA === 'string'
+    }
+    const hello = () => ctx.rest('/hello', { method: 'POST', body: surfaces }).catch(() => {})
 
     hello()
     ctx.setInterval(hello, 60_000)

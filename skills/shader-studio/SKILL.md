@@ -37,9 +37,40 @@ uniform vec3 tint;     // @color #ffb060
 uniform bool grain;    // @toggle on
 ```
 
-Expose the 2 to 5 parameters that change the character of the image (speed, scale, palette
-colour, density). Use `bool` toggles in `if (grain) { ... }`. A uniform without an annotation
-stays at zero.
+Expose 2 to 5 parameters that alter distinct, perceptible aspects of the image (for example, sun
+height, wave amplitude, pane count, or glow intensity). Every annotated uniform must be used by the
+shader; a uniform without an annotation stays at zero. Avoid several controls that all merely
+change overall brightness.
+
+Choose ranges and defaults deliberately: the default should already look finished, and both ends
+of a slider should remain visually intentional. Use a step of `1` for discrete counts. Before
+finishing, check each control at its minimum, default, and maximum (in the live preview when
+available); confirm it changes the property its label promises without breaking the composition.
+
+## Compose the image before adding detail
+
+Before writing GLSL, decide in a sentence what the viewer should notice first, what supports it,
+and what mood the palette and motion should create. Build that hierarchy with simple shapes and
+light before adding noise, particles, or fine texture.
+
+- Give the image one clear focal subject or event. Make its silhouette and scale readable at
+  thumbnail size; reserve the strongest contrast and brightest highlights for it.
+- Where the scene benefits from it, separate foreground, subject, and background through scale,
+  contrast, saturation, softness, or parallax. Let negative space frame the subject instead of
+  filling every pixel with detail.
+- Make the palette specific to the prompt. A small, related palette with a deliberate warm/cool
+  relationship usually reads more clearly than many equally bright colors. Avoid defaulting to
+  neon blue-purple gradients, a centered glow, or symmetry unless the subject calls for them.
+- Animate a cause, not just a color value: water swells, light drifts, petals open, embers rise.
+  Use one legible primary motion and quieter secondary motion; avoid pulsing the whole image or
+  layering unrelated sine waves and noise until the focal point disappears.
+- Keep procedural detail subordinate to the subject. Noise should suggest material or atmosphere,
+  not become visual static. Prefer a few deliberate shapes, edges, reflections, or particles.
+
+Do a quick quality pass before the final render: squint at the image (or inspect the still) and
+check that the focal point, depth, and motion remain clear. If it looks generic, change a
+composition or material choice, not just the palette. Keep the shader within the performance
+limits below.
 
 ## Recipes
 
@@ -114,7 +145,7 @@ Finish the image: gamma (`pow(col, vec3(0.4545))`), a soft vignette
 - `gpu.frame_ms` above 40 means it is too heavy: cut loop steps or octaves.
 - `still` is a frame at t = 2 s. If the look matters and you have a vision tool, look at it
   before you answer.
-- End the reply with the `MEDIA:` line from the result, on a line of its own. Do not paste the
+- End the reply with the `deliver` line from the result, on a line of its own after a blank line. Do not paste the
   GLSL into the reply: the card has a copy button. Say in a sentence what the controls do.
 - To change a shader, send the whole revised source to `vitrail_render` again.
   `vitrail_library` returns the source of any earlier shader by id.

@@ -31,9 +31,9 @@ RENDER = {
         "When Hermes Desktop is open, the shader is compiled on the user's GPU before this call "
         "returns: a compile error comes back as `error` with the driver log (line numbers are "
         "those of your source), so fix the source and call again without asking the user. On "
-        "success the result has `deliver`, a line `MEDIA:<path>`: end your reply with exactly "
-        "that line, on a line of its own (not in code or quotes), and do not paste the GLSL "
-        "into the reply. For recipes (noise, palettes, SDF raymarching), load the skill "
+        "success the result has `deliver`, one line of text: end your reply with exactly that "
+        "line, on a line of its own after a blank line (not in code or quotes), and do not "
+        "paste the GLSL into the reply. For recipes (noise, palettes, SDF raymarching), load the skill "
         "`vitrail:shader-studio`."
     ),
     "parameters": {

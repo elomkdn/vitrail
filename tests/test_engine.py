@@ -160,6 +160,11 @@ class StoreTests(unittest.TestCase):
         self.assertFalse(self.store.desktop_is_live())
         self.store.desktop_seen()
         self.assertTrue(self.store.desktop_is_live())
+        self.assertEqual(self.store.desktop_caps(), {"tool_media": False, "directive": False})
+        self.store.desktop_seen({"tool_media": None, "directive": True})
+        self.assertEqual(self.store.desktop_caps(), {"tool_media": False, "directive": True})
+        self.store.desktop_seen()  # a later heartbeat without a body keeps what it knew
+        self.assertEqual(self.store.desktop_caps(), {"tool_media": False, "directive": True})
 
 
 class HandlerTests(unittest.TestCase):
@@ -216,6 +221,17 @@ class HandlerTests(unittest.TestCase):
         self.assertIn("undeclared identifier", out["log"])
         self.assertNotIn("deliver", out)
 
+    def test_directive_delivery_for_a_desktop_without_tool_media(self):
+        store = engine.Store(self.root)
+        store.desktop_seen({"tool_media": False, "directive": True})
+        handlers._ask_desktop = lambda shader_id, code: False
+        out = json.loads(self.tools["vitrail_render"]({"title": "Lagoon", "code": GOOD}))
+        self.assertEqual(out["deliver"], '::vitrail{id="%s"}' % out["id"])
+        self.assertTrue(out["instruction"].endswith(out["deliver"]))
+        store.desktop_seen({"tool_media": True, "directive": True})
+        out = json.loads(self.tools["vitrail_render"]({"title": "Lagoon", "code": GOOD}))
+        self.assertTrue(out["deliver"].startswith("MEDIA:"))
+
     def test_library(self):
         made = json.loads(self.tools["vitrail_render"]({"title": "Lagoon", "code": GOOD}))
         listing = json.loads(self.tools["vitrail_library"]({}))
@@ -246,6 +262,20 @@ class HookTests(unittest.TestCase):
         self.assertIsNone(hooks.append_missing_media(response_text="x", session_id="s", turn_id="v"))
         hooks.record_media(tool_name="other_tool", result=ok, session_id="s", turn_id="w")
         self.assertIsNone(hooks.append_missing_media(response_text="x", session_id="s", turn_id="w"))
+
+
+    def test_directive_line_is_appended(self):
+        line = '::vitrail{id="lagoon-abcdef"}'
+        ok = json.dumps({"success": True, "deliver": line})
+        hooks.record_media(tool_name="vitrail_render", result=ok, session_id="s", turn_id="d1")
+        out = hooks.append_missing_media(response_text="Here it is.\n", session_id="s", turn_id="d1")
+        self.assertEqual(out, "Here it is.\n\n" + line)
+        hooks.record_media(tool_name="vitrail_render", result=ok, session_id="s", turn_id="d2")
+        self.assertIsNone(hooks.append_missing_media(
+            response_text="Done.\n\n" + line, session_id="s", turn_id="d2"))
+        evil = json.dumps({"success": True, "deliver": '::other{id="x"}'})
+        hooks.record_media(tool_name="vitrail_render", result=evil, session_id="s", turn_id="d3")
+        self.assertIsNone(hooks.append_missing_media(response_text="x", session_id="s", turn_id="d3"))
 
 
 class RegisterTests(unittest.TestCase):
