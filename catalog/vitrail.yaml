@@ -1,0 +1,32 @@
+# Submit as plugin-catalog/vitrail.yaml. Keep sha and version in step with the published commit.
+name: vitrail
+title: Vitrail
+repo: https://github.com/elomkdn/vitrail
+sha: "REPLACE_WITH_40_CHAR_COMMIT_SHA"
+description: "Live GLSL shaders in the chat. Ask for a visual and the model writes a Shadertoy-style fragment shader that animates inside the reply in Hermes Desktop, with the sliders, colour pickers and switches it declared as annotated uniforms. Before vitrail_render returns, the Desktop half compiles the shader with WebGL 2 on the user's GPU and reports the verdict, so a compile error goes back to the model with the driver log and the model fixes it in the same turn; a still frame comes back too, for models with a vision tool. Other surfaces (Telegram, CLI, TUI) get a standalone HTML player of the same shader. Adds a gallery page with hover-to-play tiles, GLSL copy and 1920x1080 PNG export, the vitrail_render and vitrail_library tools, the vitrail:shader-studio skill, and post_tool_call / transform_llm_output hooks that append the shader's MEDIA line when a reply lacks it. Disclosure — no network calls, no shell commands, no credentials, no telemetry; GLSL written by the model runs on the user's GPU through WebGL 2 in the Desktop window; files are written only under plugin-data/vitrail (per shader: source, standalone HTML player, GPU report, a 640x360 JPEG still, exported PNGs); the still's path is given to the model, which may open it with its vision tool; while a Desktop window is open its half calls the plugin's own local route once a minute so the tool knows a GPU is listening, and vitrail_render then waits up to 6 s for the verdict."
+maintainer: elomkdn
+tier: community
+category: desktop
+requires_hermes: ">=0.23.0"
+docs_url: https://github.com/elomkdn/vitrail#readme
+version: "0.1.0"
+image: https://raw.githubusercontent.com/elomkdn/vitrail/REPLACE_WITH_40_CHAR_COMMIT_SHA/assets/banner.jpg
+screenshots:
+  - https://raw.githubusercontent.com/elomkdn/vitrail/REPLACE_WITH_40_CHAR_COMMIT_SHA/assets/vitrail.jpg
+  - https://raw.githubusercontent.com/elomkdn/vitrail/REPLACE_WITH_40_CHAR_COMMIT_SHA/assets/lagoon.jpg
+  - https://raw.githubusercontent.com/elomkdn/vitrail/REPLACE_WITH_40_CHAR_COMMIT_SHA/assets/lumignon.jpg
+readme: true
+platforms: []
+known_issues:
+  - "The live card needs a Hermes Desktop with tool media renderers and its Desktop half switched on in Capabilities → Plugins; other builds and surfaces show the standalone HTML player."
+  - "GPU verification needs a Desktop window connected to the Hermes that runs the agent; without one the shader is saved unverified and compiles when it is shown."
+  - "Shaders are single-pass and procedural: no textures, buffers or audio inputs."
+capabilities:
+  provides_tools:
+    - vitrail_render
+    - vitrail_library
+  provides_hooks:
+    - post_tool_call
+    - transform_llm_output
+  provides_middleware: []
+  requires_env: []

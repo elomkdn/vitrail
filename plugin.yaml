@@ -1,0 +1,20 @@
+name: vitrail
+version: "0.1.0"
+manifest_version: 2
+api_version: 1
+description: >-
+  Live GLSL shaders in the chat. Ask for a visual and Hermes writes a fragment shader that
+  animates inside the reply, with sliders and colour pickers it declared itself. In Hermes
+  Desktop the shader is compiled on your GPU before the model answers, so compile errors go
+  back to the model and what reaches you already runs.
+author: Elom
+license: MIT
+homepage: https://github.com/elomkdn/vitrail
+tags: [shaders, glsl, webgl, creative-coding, generative-art]
+requires_hermes: ">=0.23.0"
+provides_tools:
+  - vitrail_render
+  - vitrail_library
+provides_hooks:
+  - post_tool_call
+  - transform_llm_output
